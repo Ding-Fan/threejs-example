@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Edges } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState, useCallback, useEffect } from "react";
@@ -31,7 +32,7 @@ const TiltingRectangle: React.FC<{ setSelectedPosition: (position: [number, numb
       // Updated to check for permission in a more robust way that handles compatibility across devices
       if (window.DeviceOrientationEvent && typeof (window.DeviceOrientationEvent as any).requestPermission === "function") {
         (window.DeviceOrientationEvent as any).requestPermission()
-          .then((response) => {
+          .then((response: string) => {
             if (response === "granted") {
               window.addEventListener("deviceorientation", handleOrientation);
             }

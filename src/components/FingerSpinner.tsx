@@ -1,30 +1,54 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-import { useState, useRef } from "react";
+import { Canvas, MeshProps, ThreeEvent } from "@react-three/fiber";
+import { useState, useRef, Dispatch, SetStateAction } from "react";
 import { Mesh } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useCallback } from "react";
 
-const SpinnerMesh = ({ rotationSpeed, setRotationSpeed }) => {
+interface Props extends MeshProps {
+  rotationSpeed: number;
+  setRotationSpeed: Dispatch<SetStateAction<number>>;
+}
+
+const SpinnerMesh: React.FC<Props> = ({ rotationSpeed, setRotationSpeed }) => {
   const spinnerRef = useRef<Mesh>(null);
   const [dragging, setDragging] = useState(false);
-  const [lastPointerX, setLastPointerX] = useState(null);
+  const [lastPointerX, setLastPointerX] = useState<number | null>(null);
 
   const startSpin = useCallback(
-    (e) => {
+    (e: ThreeEvent<PointerEvent | TouchEvent>) => {
       setDragging(true);
-      setLastPointerX(e.clientX || e.touches[0].clientX);
+
+      // Narrowing the event type
+      if ("clientX" in e) {
+        // This is a PointerEvent
+        setLastPointerX(e.clientX);
+      } else if (e.touches && e.touches.length > 0) {
+        // This is a TouchEvent
+        setLastPointerX(e.touches[0].clientX);
+      }
       setRotationSpeed(0); // Stop spinning when touched
     },
     [setRotationSpeed]
   );
 
   const handleDrag = useCallback(
-    (e) => {
+    (e: ThreeEvent<PointerEvent | TouchEvent>) => {
       if (dragging && lastPointerX !== null) {
-        const currentX =
-          e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+        let currentX: number;
+
+        // Narrowing the event type
+        if ("clientX" in e) {
+          // This is a PointerEvent
+          currentX = e.clientX;
+        } else if (e.touches && e.touches.length > 0) {
+          // This is a TouchEvent
+          currentX = e.touches[0].clientX;
+        } else {
+          return; // Early exit if we can't determine the current X position
+        }
+
         const deltaX = currentX - lastPointerX;
         setRotationSpeed((prevSpeed) =>
           Math.max(prevSpeed + deltaX * 0.001, 0)
@@ -58,16 +82,13 @@ const SpinnerMesh = ({ rotationSpeed, setRotationSpeed }) => {
   return (
     <mesh
       ref={spinnerRef}
-      onPointerDown={startSpin}
+      onPointerDown={stopSpin}
       onPointerMove={handleDrag}
-      onPointerUp={stopSpin}
-      onPointerOut={stopSpin}
-      onTouchStart={startSpin}
-      onTouchMove={handleDrag}
-      onTouchEnd={stopSpin}
+      onPointerUp={startSpin}
+      onPointerOut={startSpin}
     >
       <cylinderGeometry args={[1, 1, 0.2, 32]} />
-      <meshStandardMaterial color={"orange"} />
+      <meshStandardMaterial color={"mint"} />
     </mesh>
   );
 };

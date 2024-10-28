@@ -1,4 +1,4 @@
-import { OrbitControls, Text, Edges } from "@react-three/drei";
+import { Text, Edges } from "@react-three/drei";
 
 
 const DayBox: React.FC<{
